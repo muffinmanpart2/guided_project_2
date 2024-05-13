@@ -54,6 +54,24 @@ app.get("/api/planets", async (req, res) => {
     res.status(500).send("Hmmm, no planets loading");
   }
 });
+
+//GET planets by id
+app.get("/api/planets/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    //console.log(id);
+    const client = await MongoClient.connect(url);
+    const db = client.db(dbName);
+    const collection = db.collection(planetsName);
+    const planets = await collection.findOne({"id": id});
+    //console.log(id);
+    res.json(planets);
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).send("Hmmm, no planets loading");
+  }
+});
+
 app.get("/api/films_characters", async (req, res) => {
   try {
     const client = await MongoClient.connect(url);
@@ -66,6 +84,7 @@ app.get("/api/films_characters", async (req, res) => {
     res.status(500).send("Hmmm, no planets loading");
   }
 });
+
 app.get("/api/film_planets", async (req, res) => {
   try {
     const client = await MongoClient.connect(url);
@@ -78,6 +97,8 @@ app.get("/api/film_planets", async (req, res) => {
     res.status(500).send("Hmmm, no planets loading");
   }
 });
+ main
+
 app.get("/api/films/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
