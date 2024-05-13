@@ -134,26 +134,34 @@ app.get("/api/films/:id/characters", async (req, res) => {
     const filmsCharacter = await collection
       .aggregate([
         {
-        $match: {
-          film_id:id
-        }
-      },
+          $match: {
+            film_id: id,
+          },
+        },
         {
           $lookup: {
             from: charactersName,
             localField: "character_id",
             foreignField: "id",
             as: "banana",
-            pipeline: [
-              {
-                
-                $project: {
-                  name: 1,
-                },
-              },
-            ],
+            // pipeline: [
+
+            // ],
           },
         },
+        {
+          $replaceRoot: {
+            newRoot: {
+              $mergeObjects: [{ $arrayElemAt: ["$banana", 0] }, "$$ROOT"],
+            },
+          },
+        },
+        {
+          $project: {
+            name: 1,
+          },
+        },
+
         // {
         //   $lookup: {
         //     from: filmsName,
