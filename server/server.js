@@ -14,7 +14,9 @@ const filmsCharacterName = process.env.MONGO_DB_COLLECTION_Films_Characters;
 const filmPlanetsName = process.env.MONGO_DB_COLLECTION_Film_Planets;
 const app = express();
 const PORT = 3000;
-
+// Middleware to parse JSON bodies
+app.use(express.json());
+// app.use(cors());
 // Endpoint to read and send JSON file content
 app.get("/api/films", async (req, res) => {
   try {
@@ -95,11 +97,34 @@ app.get("/api/film_planets", async (req, res) => {
     res.status(500).send("Hmmm, no planets loading");
   }
 });
+ main
 
-//
-
-
-
+app.get("/api/films/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const client = await MongoClient.connect(url);
+    const db = client.db(dbName);
+    const collection = db.collection(filmsName);
+    const films = await collection.findOne({ "id": id });
+    res.json(films);
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).send("Hmmm, no films for this ID");
+  }
+});
+app.get("/api/characters/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const client = await MongoClient.connect(url);
+    const db = client.db(dbName);
+    const collection = db.collection(charactersName);
+    const characters = await collection.findOne({ "id": id });
+    res.json(characters);
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).send("Hmmm, no Characters for this ID");
+  }
+});
 // app.get("/socks/:color", async (req, res) => {
 //   try {
 //     const { color } = req.params;
@@ -119,8 +144,8 @@ app.get("/api/film_planets", async (req, res) => {
 //   }
 // });
 
-// // Middleware to parse JSON bodies
-// app.use(express.json());
+// Middleware to parse JSON bodies
+app.use(express.json());
 
 // app.post("/user", async (req, res) => {
 //   try {
