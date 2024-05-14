@@ -111,19 +111,19 @@ app.get("/api/planets/:id/films", async (req, res) => {
       .find({ planet_id: id })
       .toArray();
 
-        const collectionFilms = db.collection(filmsName);
-        const films = await Promise.all(filmPlanets.map(
-            (planet) => collectionFilms.findOne({"id": parseInt(planet.film_id)})
-
-        ))
-
-        res.json(filmPlanets);
-      } catch (err) {
-        console.error("Error:", err);
-        res.status(500).send("Hmmm, no planets loading");
-      }
-})
-
+    const collectionFilms = db.collection(filmsName);
+    const films = await Promise.all(
+      filmPlanets.map((planet) =>
+        collectionFilms.findOne({ id: parseInt(planet.film_id) })
+      )
+    );
+    const filmsNames = films.map((film) => film.title);
+    res.json(filmsNames);
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).send("Hmmm, no planets loading");
+  }
+});
 
 //
 
@@ -226,7 +226,7 @@ app.get("/api/planets/:id/characters", async (req, res) => {
     const client = await MongoClient.connect(url);
     const db = client.db(dbName);
     const collection = db.collection(charactersName);
-    const characters = await collection.find({homeworld:id}).toArray();
+    const characters = await collection.find({ homeworld: id }).toArray();
     const characterName = characters.map((character) => character.name);
     res.json(characterName);
   } catch (err) {
