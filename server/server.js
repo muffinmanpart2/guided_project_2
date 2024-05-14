@@ -102,28 +102,39 @@ app.get("/api/film_planets", async (req, res) => {
 
 //GET films based on planets
 app.get("/api/planets/:id/films", async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const client = await MongoClient.connect(url);
-    const db = client.db(dbName);
-    const collectionFilmPlanets = db.collection(filmPlanetsName);
-    const filmPlanets = await collectionFilmPlanets
-      .find({ planet_id: id })
-      .toArray();
+    try {
+        const id = parseInt(req.params.id);
+        const client = await MongoClient.connect(url);
+        const db = client.db(dbName);
+        const collectionFilmPlanets = db.collection(filmPlanetsName);
+        const filmPlanets = await collectionFilmPlanets.find({"planet_id": id }).toArray();
 
-    const collectionFilms = db.collection(filmsName);
-    const films = await Promise.all(
-      filmPlanets.map((planet) =>
-        collectionFilms.findOne({ id: parseInt(planet.film_id) })
-      )
-    );
-    const filmsNames = films.map((film) => film.title);
-    res.json(filmsNames);
-  } catch (err) {
-    console.error("Error:", err);
-    res.status(500).send("Hmmm, no planets loading");
-  }
-});
+        //creating do id for film id
+        const idFilm = parseInt(planet.film_id);
+        const collectionFilms = db.collection(filmsName);
+        
+        const films = await Promise.all(filmPlanets.map(
+            (planet) => collectionFilms.findOne({"id": idFilm}).toArray()
+
+        ))
+        
+        
+        // //creating do id for film id
+        // const idFilm = parseInt(planet.film_id);
+        // const collectionFilms = db.collection(filmsName);
+        
+        // const films = await Promise.all(filmPlanets.map(
+        //     (planet) => collectionFilms.findOne({"id": idFilm}).toArray()
+
+        // ))
+
+        res.json(films);
+      } catch (err) {
+        console.error("Error:", err);
+        res.status(500).send("Hmmm, no planets loading");
+      }
+})
+
 
 //
 
