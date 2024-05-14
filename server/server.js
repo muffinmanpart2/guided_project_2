@@ -105,13 +105,26 @@ app.get("/api/planets/:id/films", async (req, res) => {
         const collectionFilmPlanets = db.collection(filmPlanetsName);
         const filmPlanets = await collectionFilmPlanets.find({"planet_id": id }).toArray();
 
+        //creating do id for film id
+        const idFilm = parseInt(planet.film_id);
         const collectionFilms = db.collection(filmsName);
+        
         const films = await Promise.all(filmPlanets.map(
-            (planet) => collectionFilms.findOne({"id": parseInt(planet.film_id)})
+            (planet) => collectionFilms.findOne({"id": idFilm}).toArray()
 
         ))
+        
+        
+        // //creating do id for film id
+        // const idFilm = parseInt(planet.film_id);
+        // const collectionFilms = db.collection(filmsName);
+        
+        // const films = await Promise.all(filmPlanets.map(
+        //     (planet) => collectionFilms.findOne({"id": idFilm}).toArray()
 
-        res.json(filmPlanets);
+        // ))
+
+        res.json(films);
       } catch (err) {
         console.error("Error:", err);
         res.status(500).send("Hmmm, no planets loading");
