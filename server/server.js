@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import { MongoClient, ObjectId } from "mongodb";
 import dotenv from "dotenv";
 import cors from "cors";
+import { pipeline } from "stream";
 
 dotenv.config();
 const url = process.env.MONGO_DB_URL;
@@ -14,7 +15,9 @@ const filmsCharacterName = process.env.MONGO_DB_COLLECTION_Films_Characters;
 const filmPlanetsName = process.env.MONGO_DB_COLLECTION_Film_Planets;
 const app = express();
 const PORT = 3000;
-
+// Middleware to parse JSON bodies
+app.use(express.json());
+// app.use(cors());
 // Endpoint to read and send JSON file content
 app.get("/api/films", async (req, res) => {
   try {
@@ -61,7 +64,7 @@ app.get("/api/planets/:id", async (req, res) => {
     const client = await MongoClient.connect(url);
     const db = client.db(dbName);
     const collection = db.collection(planetsName);
-    const planets = await collection.findOne({"id": id});
+    const planets = await collection.findOne({ id: id });
     //console.log(id);
     res.json(planets);
   } catch (err) {
@@ -95,6 +98,7 @@ app.get("/api/film_planets", async (req, res) => {
     res.status(500).send("Hmmm, no planets loading");
   }
 });
+
 
 //GET films based on planets
 app.get("/api/planets/:id/films", async (req, res) => {
@@ -135,7 +139,152 @@ app.get("/api/planets/:id/films", async (req, res) => {
 //
 
 
+app.get("/api/films/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const client = await MongoClient.connect(url);
+    const db = client.db(dbName);
+    const collection = db.collection(filmsName);
+    const films = await collection.findOne({ id: id });
+    res.json(films);
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).send("Hmmm, no films for this ID");
+  }
+});
+app.get("/api/characters/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const client = await MongoClient.connect(url);
+    const db = client.db(dbName);
+    const collection = db.collection(charactersName);
+    const characters = await collection.findOne({ id: id });
+    res.json(characters);
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).send("Hmmm, no Characters for this ID");
+  }
+});
+app.get("/api/films/:id/characters", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const client = await MongoClient.connect(url);
+    const db = client.db(dbName);
+    const collection = db.collection(filmsCharacterName);
+    const filmsCharacter = await collection
+      .aggregate([
+        {
+          $match: {
+            film_id: id,
+          },
+        },
+        {
+          $lookup: {
+            from: charactersName,
+            localField: "character_id",
+            foreignField: "id",
+            as: "banana",
+            // pipeline: [
 
+
+            // ],
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: {
+              $mergeObjects: [{ $arrayElemAt: ["$banana", 0] }, "$$ROOT"],
+            },
+          },
+        },
+        {
+          $project: {
+            name: 1,
+          },
+        },
+
+        // {
+        //   $lookup: {
+        //     from: filmsName,
+        //     localField: "film_id",
+        //     foreignField: "id",
+        //     as: "bananaaaaaa",
+        //     pipeline: [
+        //       {
+        //         $project: {
+        //           title: 1,
+        //         },
+        //       },
+        //     ],
+        //   },
+        // },
+      ])
+      .toArray();
+    // const filmsCharacterNmae = await filmsCharacter
+    //   .find({ id: character_id })
+    //   .toArray();
+    // res.json(filmsCharacterNmae);
+    res.json(filmsCharacter);
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).send("Hmmm, no films loading");
+  }
+});
+// app.get("/api/films/:id/characters", async (req, res) => {
+//   try {
+//     const id = parseInt(req.params.id);
+//     const client = await MongoClient.connect(url);
+//     const db = client.db(dbName);
+//     const collection = db.collection(filmsCharacterName);
+//     const filmsCharacter = await collection
+//       .aggregate([
+//         {
+//           $match: {
+//             film_id: id,
+//           },
+//         },
+//         {
+//           $lookup: {
+//             from: charactersName,
+//             localField: "character_id",
+//             foreignField: "id",
+//             as: "banana",
+//             pipeline: [
+//               {
+//                 $project: {
+//                   name: 1,
+//                 },
+//               },
+//             ],
+//           },
+//         },
+//         {
+//           $lookup: {
+//             from: filmsName,
+//             localField: "film_id",
+//             foreignField: "id",
+//             as: "bananaaaaaa",
+//             pipeline: [
+//               {
+//                 $project: {
+//                   title: 1,
+//                 },
+//               },
+//             ],
+//           },
+//         },
+//       ])
+//       .toArray();
+//     // const filmsCharacterNmae = await filmsCharacter
+//     //   .find({ id: character_id })
+//     //   .toArray();
+//     // res.json(filmsCharacterNmae);
+//     res.json(filmsCharacter);
+//   } catch (err) {
+//     console.error("Error:", err);
+//     res.status(500).send("Hmmm, no films loading");
+//   }
+// });
 // app.get("/socks/:color", async (req, res) => {
 //   try {
 //     const { color } = req.params;
@@ -155,8 +304,8 @@ app.get("/api/planets/:id/films", async (req, res) => {
 //   }
 // });
 
-// // Middleware to parse JSON bodies
-// app.use(express.json());
+// Middleware to parse JSON bodies
+app.use(express.json());
 
 // app.post("/user", async (req, res) => {
 //   try {
